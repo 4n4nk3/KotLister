@@ -34,11 +34,11 @@ class MyArgs(parser: ArgParser) {
 
     val append by parser.storing(
             "--append",
-            help = "maximum generated password length").default("")
+            help = "append chosen word").default("")
 
     val prepend by parser.storing(
             "--prepend",
-            help = "maximum generated password length").default("")
+            help = "prepend chosen word").default("")
 
     val leet by parser.flagging("-l", "--leet",
             help = "enable leet mutagen")
