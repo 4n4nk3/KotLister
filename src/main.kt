@@ -118,7 +118,7 @@ fun main(args: Array<String>) = mainBody {
         val filteredCombinations: List<Set<String>> = getFilteredCombinations(inputSet, permutations)
 
         File("output.txt").bufferedWriter().use { out ->
-            comboLoop@ for (combination in filteredCombinations) {
+            for (combination in filteredCombinations) {
 
                 // Check that total length of combination (as String) isn <= max
                 if (combination.joinToString(separator = "").length <= maxL) {
