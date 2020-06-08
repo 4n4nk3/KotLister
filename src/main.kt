@@ -1,9 +1,54 @@
 package kotlister
 
 import com.marcinmoskala.math.combinations
+import com.xenomachina.argparser.ArgParser
+import com.xenomachina.argparser.default
+import com.xenomachina.argparser.mainBody
+import org.apache.commons.collections4.iterators.PermutationIterator
+import java.io.BufferedWriter
 import java.io.File
 import kotlin.system.exitProcess
-import org.apache.commons.collections4.iterators.PermutationIterator
+
+
+fun BufferedWriter.writeLn(line: String) {
+    this.write(line)
+    this.newLine()
+}
+
+class MyArgs(parser: ArgParser) {
+    val fileName by parser.storing(
+            "-i", "--input",
+            help = "input file path")
+
+    val permutations by parser.storing(
+            "-p", "--perm",
+            help = "max number of words to be combined on the same line") { toInt() }
+
+    val minL by parser.storing(
+            "--min",
+            help = "minimum generated password length") { toInt() }
+
+    val maxL by parser.storing(
+            "--max",
+            help = "maximum generated password length") { toInt() }
+
+    val append by parser.storing(
+            "--append",
+            help = "maximum generated password length").default("")
+
+    val prepend by parser.storing(
+            "--prepend",
+            help = "maximum generated password length").default("")
+
+    val leet by parser.flagging("-l", "--leet",
+            help = "enable leet mutagen")
+
+    val upper by parser.flagging("-u", "--upper",
+            help = "enable uppercase mutagen")
+
+    val capitalize by parser.flagging("-c", "--capitalize",
+            help = "enable capitalize mutagen")
+}
 
 fun toLeet(input_string: String): String {
     // Returns the leeted version of a string
@@ -66,41 +111,60 @@ fun getFilteredCombinations(input: HashSet<String>, size: Int): List<Set<String>
     }
 }
 
-fun main() {
-    // TODO: take inputs from terminal parameters
-    val capitalize = true
-    val upper = true
-    val leet = true
-    val size = 3
-    val append = "2020!"
-    val prepend = "prima"
+fun main(args: Array<String>) = mainBody {
+    ArgParser(args).parseInto(::MyArgs).run {
+        val inputSet: HashSet<String> = readInputFile(file_path = fileName, capitalize, upper)
+        // Generate combinations with N components from set
+        val filteredCombinations: List<Set<String>> = getFilteredCombinations(inputSet, permutations)
 
-    val inputSet: HashSet<String> = readInputFile(file_path = "wordlist.txt", capitalize, upper)
-    // Generate combinations with N components from set
-    val filteredCombinations: List<Set<String>> = getFilteredCombinations(inputSet, size)
-    for (combination in filteredCombinations) {
-        for (permutation in PermutationIterator(combination)) {
-            val s: String = permutation.joinToString(separator = "")
-            var leetS = ""
-            if (leet) {
-                leetS= toLeet(s)
-                println(leetS)
-            }
-            if (append.isNotEmpty()) {
-                println(s.plus(append))
-                if (leet) {
-                    println(leetS.plus(append))
-                }
-            }
-            if (prepend.isNotEmpty()) {
-                println(prepend.plus(s))
-                if (leet) {
-                    println(prepend.plus(leetS))
-                }
-                if (append.isNotEmpty()) {
-                    println(prepend.plus(s).plus(append))
-                    if (leet) {
-                        println(prepend.plus(leetS).plus(append))
+        File("output.txt").bufferedWriter().use { out ->
+            comboLoop@ for (combination in filteredCombinations) {
+
+                // Check that total length of combination (as String) isn <= max
+                if (combination.joinToString(separator = "").length <= maxL) {
+
+                    for (permutation in PermutationIterator(combination)) {
+                        val s: String = permutation.joinToString(separator = "")
+                        var leetS = ""
+                        var temp: String
+
+                        if (leet) {
+                            leetS = toLeet(s)
+                            if (minL <= leetS.length) {
+                                out.writeLn(leetS)
+                            }
+                        }
+
+                        if (append.isNotEmpty()) {
+                            temp = s.plus(append)
+                            if (temp.length in minL..maxL) {
+                                out.writeLn(temp)
+                                if (leet) {
+                                    out.writeLn(leetS.plus(append))
+                                }
+                            }
+                        }
+
+                        if (prepend.isNotEmpty()) {
+                            temp = prepend.plus(s)
+                            if (temp.length in minL..maxL) {
+                                out.writeLn(temp)
+                                if (leet) {
+                                    out.writeLn(prepend.plus(leetS))
+                                }
+                            }
+
+                            if (append.isNotEmpty()) {
+                                temp = prepend.plus(s).plus(append)
+                                if (temp.length in minL..maxL) {
+                                    out.writeLn(prepend.plus(s).plus(append))
+                                    if (leet) {
+                                        out.writeLn(prepend.plus(leetS).plus(append))
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
             }
