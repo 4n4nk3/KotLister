@@ -1,5 +1,5 @@
 # KotLister
-A simple wordlist generator and mangler written in Kotlin as a first exercise to try out this language.
+A simple wordlist generator and mangler written in Kotlin.
 
 ### Supported permutations:
  - [x] Capital
